@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRUX // TERMINALCORE</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="crt"></div>
+
+<header>
+  <h1>[KRUX]</h1>
+  <span class="prompt">link-mapper v2 // terminalcore</span>
+  <div class="input-wrap">
+    <span>&gt;</span>
+    <input id="url" type="text" placeholder="https://example.com" spellcheck="false">
+    <div class="depth-wrap">
+      <label>d:</label>
+      <input id="depth" type="number" min="1" max="3" value="1">
+    </div>
+    <button id="summon">SCAN</button>
+    <button id="export">DUMP .DOT</button>
+    <button id="toggleLog">LOG</button>
+  </div>
+</header>
+
+<div id="stage">
+  <div id="progress-bar"><div class="fill"></div></div>
+  <svg class="links"></svg>
+  <div id="nodes"></div>
+  <div id="preview">
+    <div class="cap"><span>PREVIEW</span><span>MONO</span></div>
+    <iframe sandbox="allow-scripts allow-same-origin"></iframe>
+  </div>
+  <div id="log"></div>
+  <div id="zoom-controls">
+    <button id="zoomIn" title="zoom in">+</button>
+    <button id="zoomOut" title="zoom out">-</button>
+    <button id="zoomReset" title="reset">*</button>
+  </div>
+</div>
+
+<footer>
+  <div class="badge">MODE: MONOCHROME</div>
+  <div class="badge">88x31 // RETRO</div>
+  <div class="badge" id="count">0 links</div>
+</footer>
+
+<div id="spell">
+  <canvas width="700" height="700"></canvas>
+  <button id="closeSpell">[ CLOSE ]</button>
+</div>
+
+<script src="renderer.js"></script>
+<script src="graph.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

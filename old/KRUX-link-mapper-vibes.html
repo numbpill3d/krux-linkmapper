@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRUX // TERMINALCORE</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+:root{
+  --phosphor:#ff3333;
+  --phosphor-dim:#3f0f0f;
+  --bg:#000000;
+  --amber:#ffb000;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--phosphor);font-family:"Share Tech Mono", monospace;overflow:hidden}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-3;
+  background:
+    radial-gradient(ellipse at center, #1a0000 0%, #000 70%),
+    repeating-linear-gradient(0deg, rgba(255,0,0,0.03) 0 1px, transparent 2px 3px);
+}
+.crt{
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0px, transparent 2px, transparent 4px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+  mix-blend-mode:multiply;opacity:0.85;animation:flicker 0.09s infinite;
+}
+@keyframes flicker{0%,100%{opacity:.82}50%{opacity:.9}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+header{
+  position:relative;padding:10px 14px;display:flex;gap:12px;align-items:center;
+  background:#000;border-bottom:2px solid var(--phosphor);
+  box-shadow:0 0 12px rgba(255,51,51,0.3), inset 0 0 20px rgba(40,0,0,0.8);
+  font-family:"VT323", monospace;
+}
+header h1{margin:0;font-size:26px;letter-spacing:1px;color:var(--phosphor);text-shadow:0 0 6px var(--phosphor);}
+header .prompt{color:var(--phosphor-dim)}
+.input-wrap{display:flex;gap:6px;margin-left:auto;align-items:center}
+input[type=text]{
+  width:420px;max-width:45vw;background:#000;color:var(--phosphor);border:1px solid var(--phosphor);
+  padding:6px 8px;font-family:"Share Tech Mono";font-size:16px;outline:none;
+  box-shadow:inset 0 0 8px rgba(255,51,51,.2),0 0 6px rgba(255,51,51,.15);
+  caret-color:var(--phosphor);
+}
+input::placeholder{color:#a40}
+button{
+  background:#000;color:var(--phosphor);border:1px solid var(--phosphor);padding:6px 10px;
+  font-family:"VT323";font-size:16px;cursor:pointer;text-transform:uppercase;
+  box-shadow:0 0 8px rgba(255,51,51,.25);
+}
+button:hover{background:var(--phosphor);color:#000;box-shadow:0 0 14px var(--phosphor)}
+button:active{transform:translateY(1px)}
+
+#stage{position:relative;width:100%;height:calc(100% - 58px);}
+svg.links{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.node{
+  position:absolute;z-index:2;width:88px;height:31px;transform:translate(-44px,-15.5px);
+  filter:drop-shadow(0 0 4px rgba(255,51,51,.5));cursor:pointer;
+}
+.node img{width:88px;height:31px;image-rendering:pixelated;border:1px solid var(--phosphor);background:#000}
+.node.center img{border:2px solid var(--phosphor);box-shadow:0 0 10px var(--phosphor)}
+.node:hover{transform:translate(-44px,-15.5px) scale(1.12);z-index:5}
+.node .label{
+  position:absolute;top:33px;left:50%;transform:translateX(-50%);
+  font-size:11px;white-space:nowrap;background:#000;padding:0 3px;border:1px solid var(--phosphor-dim);color:var(--phosphor);pointer-events:none;max-width:120px;overflow:hidden;text-overflow:ellipsis
+}
+.cursed{animation:shake .35s infinite;}
+.cursed img{border-color:#ff3333 !important;box-shadow:0 0 8px #ff0000 !important;filter:contrast(1.3) brightness(0.8)}
+.cursed .label{color:#ff5555;border-color:#600;animation:blink 1s infinite}
+@keyframes shake{
+  0%,100%{transform:translate(-44px,-15.5px)}
+  25%{transform:translate(-45px,-15.5px)}
+  75%{transform:translate(-43px,-15.5px)}
+}
+
+.link-chain{stroke:var(--phosphor);stroke-width:1;stroke-dasharray:3 3;opacity:.6}
+.link-dim{stroke:var(--phosphor-dim);stroke-width:0.5;opacity:.4}
+
+#preview{
+  position:absolute;display:none;z-index:10;width:360px;height:260px;
+  background:#000;border:2px solid var(--phosphor);padding:4px;
+  box-shadow:0 0 16px rgba(255,51,51,.4), inset 0 0 20px rgba(30,0,0,.9);
+}
+#preview::before{
+  content:"";position:absolute;inset:-4px;border:1px dashed var(--phosphor-dim);pointer-events:none;
+}
+#preview iframe{width:100%;height:calc(100% - 18px);border:1px solid var(--phosphor-dim);background:#fff;filter:grayscale(1) contrast(1.2) brightness(0.9) hue-rotate(0deg)}
+#preview .cap{
+  height:18px;line-height:18px;font-family:"VT323";font-size:14px;color:#000;background:var(--phosphor);
+  padding:0 6px;display:flex;justify-content:space-between;align-items:center;
+  text-transform:uppercase;
+}
+#preview .cap span:last-child{opacity:.7}
+
+footer{position:fixed;bottom:8px;left:10px;display:flex;gap:10px;z-index:20;font-size:12px;color:var(--phosphor-dim)}
+.badge{padding:2px 5px;border:1px solid var(--phosphor-dim);background:rgba(20,0,0,.6)}
+
+#spell{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:10000;flex-direction:column;gap:10px}
+#spell canvas{background:#000;border:1px solid var(--phosphor);box-shadow:0 0 30px rgba(255,51,51,.3)}
+#log{
+  position:absolute;top:58px;right:10px;width:320px;max-height:40%;overflow:auto;
+  background:rgba(10,0,0,.85);border:1px solid var(--phosphor-dim);padding:6px;font-size:12px;color:var(--phosphor);
+  z-index:15;display:none;
+}
+</style>
+</head>
+<body>
+<div class="crt"></div>
+<header>
+  <h1>[KRUX]</h1><span class="prompt">link-mapper v2 // terminalcore</span>
+  <div class="input-wrap">
+    <span>&gt;</span>
+    <input id="url" type="text" placeholder="https://example.com" spellcheck="false">
+    <button id="summon">SCAN</button>
+    <button id="export">DUMP .DOT</button>
+    <button id="toggleLog">LOG</button>
+  </div>
+</header>
+<div id="stage">
+  <svg class="links"></svg>
+  <div id="nodes"></div>
+  <div id="preview"><div class="cap"><span>PREVIEW</span><span>MONO</span></div><iframe sandbox="allow-scripts allow-same-origin"></iframe></div>
+  <div id="log"></div>
+</div>
+<footer>
+  <div class="badge">MODE: MONOCHROME</div>
+  <div class="badge">88×31 // RETRO</div>
+  <div class="badge" id="count">0 links</div>
+</footer>
+<div id="spell"><canvas width="700" height="700"></canvas><button id="closeSpell">[ CLOSE ]</button></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), svg = d3.select('svg.links'), nodesLayer = $('#nodes');
+const preview = $('#preview'), previewFrame = preview.querySelector('iframe');
+const logEl = $('#log');
+
+function log(msg){
+  const line = document.createElement('div'); line.textContent = '> ' + msg; logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight;
+}
+$('#toggleLog').onclick = ()=>{ logEl.style.display = logEl.style.display==='block'?'none':'block' };
+
+function beep(freq=1200,dur=0.04){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type='square'; o.frequency.value=freq; g.gain.value=0.04;
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dur); o.stop(ctx.currentTime+dur+0.01);
+  }catch(e){}
+}
+
+function make88x31(text, center=false){
+  const c = document.createElement('canvas'); c.width=88; c.height=31;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,88,31);
+  ctx.strokeStyle=center?'#ff3333':'#5a1a1a'; ctx.lineWidth=center?2:1; ctx.strokeRect(0.5,0.5,87,30);
+  // scanlines
+  ctx.fillStyle='rgba(255,51,51,0.07)'; for(let y=2;y<31;y+=2) ctx.fillRect(2,y,84,1);
+  ctx.font='bold 10px "Share Tech Mono", monospace'; ctx.fillStyle='#ff3333'; ctx.textAlign='center';
+  ctx.shadowColor='#ff3333'; ctx.shadowBlur=center?4:0;
+  const label = text.replace(/^https?:\/\//,'').replace(/^www\./,'').slice(0,15);
+  ctx.fillText(label.toUpperCase(),44,19);
+  // corner brackets
+  ctx.fillStyle='#f30'; ctx.fillRect(2,2,3,1); ctx.fillRect(2,2,1,3); ctx.fillRect(83,2,3,1); ctx.fillRect(85,2,1,3);
+  return c.toDataURL();
+}
+
+let graph={nodes:[],links:[]}, simulation;
+
+function render(){
+  nodesLayer.innerHTML=''; svg.selectAll('*').remove();
+  const width=stage.clientWidth, height=stage.clientHeight;
+  svg.attr('viewBox',`0 0 ${width} ${height}`);
+
+  const linkDim = svg.append('g').selectAll('line').data(graph.links).enter().append('line').attr('class','link-dim');
+  const linkChain = svg.append('g').selectAll('line').data(graph.links).enter().append('line').attr('class','link-chain');
+
+  graph.nodes.forEach(n=>{
+    const el=document.createElement('div'); el.className='node'+(n.center?' center':'')+(n.cursed?' cursed':'');
+    el.dataset.url=n.url;
+    const img=document.createElement('img'); img.src=make88x31(n.label||n.url,n.center); img.alt=n.label; el.appendChild(img);
+    const lab=document.createElement('div'); lab.className='label'; lab.textContent=n.label; el.appendChild(lab);
+    nodesLayer.appendChild(el); n.el=el;
+    el.addEventListener('mouseenter',e=>{ beep(1400,0.03); preview.style.display='block'; previewFrame.src=n.url; positionPreview(e); });
+    el.addEventListener('mousemove',positionPreview);
+    el.addEventListener('mouseleave',()=>{ preview.style.display='none'; previewFrame.src='about:blank'; });
+    el.addEventListener('click',()=>{ beep(800,0.05); window.open(n.url,'_blank'); });
+  });
+
+  simulation = d3.forceSimulation(graph.nodes)
+    .force('link', d3.forceLink(graph.links).id(d=>d.id).distance(110).strength(0.25))
+    .force('charge', d3.forceManyBody().strength(-280))
+    .force('center', d3.forceCenter(width/2, height/2))
+    .force('collide', d3.forceCollide(50))
+    .on('tick',()=>{
+      linkChain.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      linkDim.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+      graph.nodes.forEach(n=>{ if(n.el){ n.el.style.left=n.x+'px'; n.el.style.top=n.y+'px'; } });
+    });
+  $('#count').textContent = `${graph.nodes.length-1} links`;
+}
+
+function positionPreview(e){
+  const pad=14; let x=e.clientX+pad, y=e.clientY+pad;
+  if(x+360>window.innerWidth) x=e.clientX-360-pad;
+  if(y+270>window.innerHeight) y=e.clientY-270-pad;
+  preview.style.left=x+'px'; preview.style.top=y+'px';
+}
+
+async function summon(){
+  const raw=$('#url').value.trim(); if(!raw) return;
+  let url = raw.startsWith('http')?raw:'https://'+raw;
+  try{new URL(url)}catch{alert('INVALID URL');return}
+  $('#summon').disabled=true; $('#summon').textContent='SCANNING...'; logEl.style.display='block'; logEl.innerHTML=''; log(`init scan: ${url}`);
+  graph={nodes:[],links:[]};
+  const center={id:0,url, label:new URL(url).hostname, center:true};
+  graph.nodes.push(center);
+
+  let html=''; try{
+    const res = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    const data = await res.json(); html=data.contents||''; log(`fetched ${html.length} bytes`);
+  }catch(e){ log('fetch failed'); }
+
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const base = doc.querySelector('base')?.href || url;
+  const anchors = Array.from(doc.querySelectorAll('a[href]')).map(a=>{
+    try{ return new URL(a.getAttribute('href'), base).href; }catch{return null}
+  }).filter(h=>h && /^https?:/.test(h));
+
+  const uniq = [...new Set(anchors)];
+  log(`found ${anchors.length} <a>, ${uniq.length} unique`);
+
+  // create all nodes immediately
+  uniq.forEach((link,i)=>{
+    const u = new URL(link);
+    const node={id:i+1,url:link,label:u.hostname.replace(/^www\./,'')+u.pathname.slice(0,12),cursed:false};
+    graph.nodes.push(node);
+    graph.links.push({source:0,target:i+1});
+  });
+
+  render();
+  $('#summon').disabled=false; $('#summon').textContent='SCAN';
+  log(`rendered ${uniq.length} nodes`);
+
+  // background cursed check - limited concurrency
+  const checkBatch = async (nodes) => {
+    for(let i=0;i<nodes.length;i+=8){
+      await Promise.all(nodes.slice(i,i+8).map(async n=>{
+        try{
+          const r = await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(n.url),{signal:AbortSignal.timeout(6000)});
+          if(!r.ok) throw 0;
+          const d = await r.json();
+          if(!d.contents || d.contents.length<50) throw 0;
+        }catch{
+          n.cursed=true; if(n.el){ n.el.classList.add('cursed'); n.el.querySelector('img').src = make88x31(n.label); }
+          log(`cursed: ${n.url}`);
+        }
+      }));
+    }
+  };
+  checkBatch(graph.nodes.slice(1));
+}
+
+$('#summon').onclick=summon;
+$('#url').addEventListener('keydown',e=>{if(e.key==='Enter')summon()});
+
+$('#export').onclick=()=>{
+  beep(600,0.06);
+  let dot='digraph KRUX {\n  graph [bgcolor=black, color="#ff3333", fontcolor="#ff3333", fontname="Share Tech Mono"];\n  node [shape=box, style=filled, fillcolor=black, color="#ff3333", fontcolor="#ff3333", fontname="Share Tech Mono", fontsize=10];\n  edge [color="#3f0f0f"];\n';
+  graph.nodes.forEach(n=>{dot+=`  "${n.id}" [label="${n.label.replace(/"/g,'')}"];\n`});
+  graph.links.forEach(l=>{dot+=`  "${l.source.id||l.source}" -> "${l.target.id||l.target}";\n`});
+  dot+='}\n';
+  const blob=new Blob([dot],{type:'text/vnd.graphviz'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='krux-terminal.dot'; a.click();
+  log('exported .dot');
+
+  const spell=$('#spell'); spell.style.display='flex';
+  const canvas=spell.querySelector('canvas'); const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,700,700);
+  ctx.save(); ctx.translate(350,350); ctx.strokeStyle='#ff3333'; ctx.shadowColor='#ff3333'; ctx.shadowBlur=8;
+  for(let r=320;r>20;r-=28){ ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.globalAlpha=0.15+r/2000; ctx.stroke(); }
+  ctx.globalAlpha=1;
+  const nodes = graph.nodes.slice(0, Math.min(120, graph.nodes.length));
+  nodes.forEach((n,i)=>{
+    const ang = i/nodes.length * Math.PI*2;
+    const rad = 200 + (i%3)*40;
+    const x = Math.cos(ang)*rad, y = Math.sin(ang)*rad;
+    ctx.fillStyle=n.cursed?'#300':'#1a0000'; ctx.strokeStyle=n.cursed?'#f33':'#f33';
+    ctx.fillRect(x-30,y-6,60,12); ctx.strokeRect(x-30,y-6,60,12);
+    ctx.fillStyle='#f33'; ctx.font='9px "Share Tech Mono"'; ctx.textAlign='center'; ctx.fillText(n.label.slice(0,8),x,y+3);
+  });
+  ctx.restore();
+  // terminal text
+  ctx.fillStyle='#f33'; ctx.font='14px "VT323"'; ctx.fillText(`KRUX DUMP // ${graph.nodes.length} NODES`,20,30);
+  ctx.fillText(new Date().toISOString(),20,50);
+};
+$('#closeSpell').onclick=()=>{$('#spell').style.display='none'};
+
+window.addEventListener('load',()=>{ $('#url').value='https://example.com'; });
+</script>
+</body>
+</html>

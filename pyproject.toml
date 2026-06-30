@@ -1,0 +1,13 @@
+[project]
+name = "krux-linkmapper"
+version = "0.1.0"
+description = "terminalcore link mapper // crawl the web as a force graph"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "aiohttp>=3.9.0",
+]
+
+[project.scripts]
+krux = "server.main:run"
