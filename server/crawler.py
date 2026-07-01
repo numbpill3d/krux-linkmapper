@@ -8,7 +8,7 @@ from typing import Optional
 import time
 import uuid
 
-from config import (
+from server.config import (
     CRAWL_DELAY, CRAWL_TIMEOUT, CRAWL_MAX_CONCURRENT,
     CRAWL_USER_AGENT, CRAWL_DEFAULT_MAX_LINKS, CRAWL_DEFAULT_DEPTH,
 )
@@ -158,7 +158,10 @@ class AsyncCrawler:
             return False
 
         node.expanded = True
-        asyncio.create_task(self._run_expand(session, node_url, node.depth + 1))
+        expand_depth = node.depth + 1
+        if expand_depth > session.depth:
+            session.depth = expand_depth
+        asyncio.create_task(self._run_expand(session, node_url, expand_depth))
         return True
 
     async def _run_expand(self, session: CrawlSession, url: str, depth: int):

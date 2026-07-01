@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from server.crawler import AsyncCrawler
-from config import SERVER_HOST, SERVER_PORT
+from server.config import SERVER_HOST, SERVER_PORT
 
 app = FastAPI(title='KRUX LinkMapper', docs_url=None, redoc_url=None)
 crawler = AsyncCrawler()

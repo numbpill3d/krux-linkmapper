@@ -9,5 +9,15 @@ dependencies = [
     "aiohttp>=3.9.0",
 ]
 
+[project.optional-dependencies]
+gui = ["pywebview>=4"]
+
 [project.scripts]
-krux = "server.main:run"
+krux = "server.cli:main"
+
+[tool.setuptools.packages]
+find = { include = ["server*"] }
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
