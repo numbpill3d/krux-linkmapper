@@ -1,5 +1,6 @@
 import asyncio
 import uvicorn
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
@@ -104,7 +105,8 @@ async def list_sessions():
     }
 
 
-app.mount('/', StaticFiles(directory='client', html=True), name='client')
+CLIENT_DIR = Path(__file__).resolve().parent / 'client'
+app.mount('/', StaticFiles(directory=str(CLIENT_DIR), html=True), name='client')
 
 
 def run():

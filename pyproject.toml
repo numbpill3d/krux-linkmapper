@@ -18,6 +18,9 @@ krux = "server.cli:main"
 [tool.setuptools.packages]
 find = { include = ["server*"] }
 
+[tool.setuptools.package-data]
+server = ["client/*.html", "client/*.js", "client/*.css"]
+
 [build-system]
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
