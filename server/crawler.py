@@ -11,6 +11,7 @@ import uuid
 from server.config import (
     CRAWL_DELAY, CRAWL_TIMEOUT, CRAWL_MAX_CONCURRENT,
     CRAWL_USER_AGENT, CRAWL_DEFAULT_MAX_LINKS, CRAWL_DEFAULT_DEPTH,
+    CRAWL_MAX_DEPTH, CRAWL_MAX_LINKS,
 )
 
 
@@ -121,8 +122,8 @@ class AsyncCrawler:
         session = CrawlSession(
             id=session_id,
             root_url=normalize_url(url),
-            depth=min(depth, CRAWL_DEFAULT_DEPTH),
-            max_links=min(max_links, CRAWL_DEFAULT_MAX_LINKS),
+            depth=min(depth, CRAWL_MAX_DEPTH),
+            max_links=min(max_links, CRAWL_MAX_LINKS),
             status='running',
             created_at=time.time(),
         )
@@ -172,12 +173,13 @@ class AsyncCrawler:
             timeout=aiohttp.ClientTimeout(total=CRAWL_TIMEOUT),
         ) as http:
             try:
-                await self._crawl_url(http, session, url, depth)
+                parent_id = make_node_id(normalize_url(url))
+                await self._crawl_url(http, session, url, depth, parent_id=parent_id)
             except Exception as e:
                 session.error = str(e)
 
     async def _crawl_url(self, http: aiohttp.ClientSession, session: CrawlSession,
-                         url: str, depth: int):
+                         url: str, depth: int, parent_id: str | None = None):
         if depth > session.depth:
             return
         if len(session.nodes) >= session.max_links:
@@ -188,6 +190,11 @@ class AsyncCrawler:
 
         node_id = make_node_id(url)
         if node_id in session.nodes:
+            # Already known — still make sure the edge from the parent exists.
+            if parent_id and parent_id in session.nodes:
+                link = (parent_id, node_id)
+                if link not in session.links:
+                    session.links.append(link)
             return
 
         page_urls: list[str] = []
@@ -236,14 +243,13 @@ class AsyncCrawler:
         session.nodes[node_id] = node
         session.total = len(session.nodes)
 
-        for child_url in page_urls[:session.max_links]:
-            child_id = make_node_id(child_url)
-            link = (node_id, child_id)
-            # Only link if BOTH endpoints are real nodes. The recursive crawl can
-            # bail early on depth/max_links/robots, so a child may never be
-            # created — linking to a missing id makes d3 forceLink throw
-            # "node not found" on the frontend.
-            if child_id in session.nodes and link not in session.links:
+        # Edge is recorded only now that BOTH endpoints are guaranteed to exist:
+        # this node was just created, and the parent (if any) must already exist.
+        # This prevents d3 forceLink from receiving a link to a missing node
+        # ("node not found").
+        if parent_id and parent_id in session.nodes:
+            link = (parent_id, node_id)
+            if link not in session.links:
                 session.links.append(link)
 
         session.progress = len(session.nodes)
@@ -252,14 +258,20 @@ class AsyncCrawler:
             tasks = []
             for child_url in page_urls[:session.max_links]:
                 child_id = make_node_id(child_url)
-                if child_id in session.nodes:
-                    continue
                 if len(session.nodes) >= session.max_links:
                     break
-                tasks.append(self._crawl_child(http, session, child_url, depth + 1))
+                if child_id in session.nodes:
+                    # Child already exists (likely created by a concurrent
+                    # sibling crawl). Don't re-crawl it, but still record the
+                    # edge from this node so the graph stays connected.
+                    link = (node_id, child_id)
+                    if link not in session.links:
+                        session.links.append(link)
+                    continue
+                tasks.append(self._crawl_child(http, session, child_url, depth + 1, node_id))
             if tasks:
                 await asyncio.gather(*tasks)
 
     async def _crawl_child(self, http: aiohttp.ClientSession, session: CrawlSession,
-                           url: str, depth: int):
-        await self._crawl_url(http, session, url, depth)
+                           url: str, depth: int, parent_id: str | None = None):
+        await self._crawl_url(http, session, url, depth, parent_id=parent_id)
