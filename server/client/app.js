@@ -287,7 +287,15 @@
     $('#spell').style.display = 'flex';
   }
 
+  function fitDevice() {
+    const s = Math.min(window.innerWidth / 870, window.innerHeight / 1074);
+    document.getElementById('device').style.setProperty('--s', s.toFixed(4));
+  }
+
   function init() {
+    fitDevice();
+    window.addEventListener('resize', fitDevice);
+
     $('#summon').onclick = startScan;
     $('#url').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') startScan();

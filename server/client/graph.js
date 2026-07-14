@@ -29,7 +29,10 @@
 
   g.setGraph = function(newNodes, newLinks) {
     nodes = newNodes;
-    links = newLinks;
+    // Drop links whose endpoints aren't present (defensive — backend should
+    // already guarantee this, but d3 throws "node not found" otherwise).
+    const ids = new Set(nodes.map(n => n.id));
+    links = newLinks.filter(l => ids.has(l.source) && ids.has(l.target));
   };
 
   g.render = function(width, height) {
@@ -47,10 +50,12 @@
 
     simulation = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links)
-        .id(d => d.id).distance(110).strength(0.25))
-      .force('charge', d3.forceManyBody().strength(-280))
+        .id(d => d.id).distance(70).strength(0.4))
+      .force('charge', d3.forceManyBody().strength(-180))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide(50))
+      .force('x', d3.forceX(width / 2).strength(0.05))
+      .force('y', d3.forceY(height / 2).strength(0.05))
+      .force('collide', d3.forceCollide(34))
       .on('tick', () => {
         linkChain
           .attr('x1', d => d.source.x)
@@ -69,6 +74,11 @@
           }
         });
       });
+
+    // Settle the layout a bit before first paint so the graph appears centered
+    // instead of exploding from the origin.
+    for (let i = 0; i < 30; i++) simulation.tick();
+    simulation.alpha(0.8).restart();
 
     return simulation;
   };

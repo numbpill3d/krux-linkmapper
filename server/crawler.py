@@ -239,7 +239,11 @@ class AsyncCrawler:
         for child_url in page_urls[:session.max_links]:
             child_id = make_node_id(child_url)
             link = (node_id, child_id)
-            if link not in session.links:
+            # Only link if BOTH endpoints are real nodes. The recursive crawl can
+            # bail early on depth/max_links/robots, so a child may never be
+            # created — linking to a missing id makes d3 forceLink throw
+            # "node not found" on the frontend.
+            if child_id in session.nodes and link not in session.links:
                 session.links.append(link)
 
         session.progress = len(session.nodes)

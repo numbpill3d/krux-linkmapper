@@ -26,10 +26,10 @@ def _open_webview():
     window = webview.create_window(
         'KRUX // LINKMAPPER',
         f'http://localhost:{SERVER_PORT}',
-        width=1280,
-        height=800,
+        width=380,
+        height=470,
         resizable=True,
-        min_size=(800, 500),
+        min_size=(300, 380),
     )
 
     webview.start(private_mode=False)
