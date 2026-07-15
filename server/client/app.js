@@ -296,6 +296,47 @@
     fitDevice();
     window.addEventListener('resize', fitDevice);
 
+    // --- frameless casing: drag via the titlebar, resize via the corner grip ---
+    const api = window.pywebview && window.pywebview.api;
+    const titlebar = $('#titlebar');
+    const grip = $('#resize');
+
+    let dragMoved = false;
+    if (titlebar && api && api.drag_by) {
+      titlebar.addEventListener('pointerdown', function(e) {
+        if (e.target !== titlebar) return;
+        dragMoved = false;
+        const startX = e.clientX, startY = e.clientY;
+        function move(ev) {
+          const dx = ev.clientX - startX, dy = ev.clientY - startY;
+          if (Math.abs(dx) + Math.abs(dy) > 2) dragMoved = true;
+          api.drag_by(dx, dy);
+        }
+        function up() {
+          document.removeEventListener('pointermove', move);
+          document.removeEventListener('pointerup', up);
+        }
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+      });
+      titlebar.addEventListener('click', e => { if (dragMoved) e.stopPropagation(); });
+    }
+    if (grip && api && api.resize_by) {
+      grip.addEventListener('pointerdown', function(e) {
+        e.stopPropagation();
+        const startX = e.clientX, startY = e.clientY;
+        function move(ev) {
+          api.resize_by(ev.clientX - startX, ev.clientY - startY);
+        }
+        function up() {
+          document.removeEventListener('pointermove', move);
+          document.removeEventListener('pointerup', up);
+        }
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+      });
+    }
+
     $('#summon').onclick = startScan;
     $('#url').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') startScan();
