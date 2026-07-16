@@ -18,17 +18,19 @@ body {
    (--s = min(vw/870, vh/1074)). Screen rect inside the frame: (328,287,315,500). */
 #device {
   position: relative;
-  left: -12px;                 /* snug: real casing shape is ~12px left-of-center in frame.png */
   width: 870px; height: 1074px;
   transform: scale(var(--s, 0.5));
   transform-origin: center center;
   background: url('frame.png') center / 100% 100% no-repeat;
 }
-/* The live UI lives exactly inside the device's screen region. */
+/* The live UI is mapped exactly onto the green inner screen of the mi.png
+   casing. Green-screen bbox in native 1080px: x[421..871] y[111..807];
+   mapped to the 870x1074 device box and inset ~8px for the black border:
+   left=347 top=118 width=347 height=677. */
 #screen {
   position: absolute;
-  left: 328px; top: 287px;
-  width: 315px; height: 500px;
+  left: 347px; top: 118px;
+  width: 347px; height: 677px;
   background: #000;
   overflow: hidden;
   display: flex; flex-direction: column;
@@ -46,12 +48,12 @@ body {
 }
 @keyframes flicker { 0%,100% { opacity: .52 } 50% { opacity: .6 } }
 
-/* ---- casing window controls (close / minimize) over the mi.png shell ---- */
-/* Positioned in device-coords so they scale with the casing. Placed on the top
-   bezel just above the screen. */
+/* ---- casing window controls (close / minimize) on the bezel above the
+   green screen, right-aligned to the screen's right edge, beside the device's
+   own red indicator so they read as part of the casing. ---- */
 #win-controls {
   position: absolute;
-  top: 250px; left: 328px; width: 315px;
+  top: 70px; left: 347px; width: 347px;
   display: flex; justify-content: flex-end; gap: 8px;
   z-index: 200;
 }

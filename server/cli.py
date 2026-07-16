@@ -75,6 +75,7 @@ def _open_webview():
     window = webview.create_window(
         'KRUX // LINKMAPPER',
         f'http://localhost:{SERVER_PORT}',
+        js_api=_KruxAPI(),
         width=int(870 * BASE),
         height=int(1074 * BASE),
         resizable=True,
@@ -82,7 +83,7 @@ def _open_webview():
         frameless=True,
         transparent=True,
     )
-    webview.start(_KruxAPI(), private_mode=False)
+    webview.start(private_mode=False)
     os._exit(0)
 
 
