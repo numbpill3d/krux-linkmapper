@@ -288,9 +288,9 @@
   }
 
   function fitDevice() {
-    // fit the whole casing but allow it to push a touch wider than pure
-    // letterbox — user asked to widen the design slightly.
-    const s = Math.min(window.innerWidth / 870, window.innerHeight / 1074) * 1.12;
+    // window is sized to the scaled device (870*BASE x 1074*BASE), so the
+    // casing fills it exactly. derive --s from the real window width.
+    const s = window.innerWidth / 870;
     document.getElementById('device').style.setProperty('--s', s.toFixed(4));
   }
 

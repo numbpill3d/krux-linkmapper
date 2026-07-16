@@ -60,13 +60,25 @@ def _open_webview():
             except Exception:
                 pass
 
+    # Size the window to the *scaled device* so the casing fills it exactly
+    # (no dead transparent margin, no squished content). BASE picks a comfy
+    # scale from the primary monitor; the page derives --s = innerWidth/870.
+    try:
+        from pywebview.screen import Screen
+        prim = Screen().get_primary()
+        vw, vh = prim.width, prim.height
+    except Exception:
+        vw, vh = 1920, 1080
+    BASE = min(vw * 0.82 / 870, vh * 0.82 / 1074)
+    BASE = max(0.45, min(BASE, 1.1))
+
     window = webview.create_window(
         'KRUX // LINKMAPPER',
         f'http://localhost:{SERVER_PORT}',
-        width=430,
-        height=540,
+        width=int(870 * BASE),
+        height=int(1074 * BASE),
         resizable=True,
-        min_size=(300, 380),
+        min_size=(int(870 * 0.4), int(1074 * 0.4)),
         frameless=True,
         transparent=True,
     )
