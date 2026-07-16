@@ -18,6 +18,7 @@ body {
    (--s = min(vw/870, vh/1074)). Screen rect inside the frame: (328,287,315,500). */
 #device {
   position: relative;
+  left: -12px;                 /* snug: real casing shape is ~12px left-of-center in frame.png */
   width: 870px; height: 1074px;
   transform: scale(var(--s, 0.5));
   transform-origin: center center;
