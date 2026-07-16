@@ -24,13 +24,13 @@ def _open_webview():
     import webview
 
     class _KruxAPI:
-        """Minimal bridge so the page can move/resize the frameless window.
+        """Minimal bridge so the page can move/resize/close the frameless window.
         The page passes *deltas*; we track current geometry in Python."""
         def __init__(self):
             self._x = 0
             self._y = 0
-            self._w = 380
-            self._h = 470
+            self._w = 430
+            self._h = 540
 
         def _sync(self):
             try:
@@ -48,15 +48,28 @@ def _open_webview():
             self._sync()
             webview.windows[0].resize(max(300, self._w + dw), max(380, self._h + dh))
 
+        def close(self):
+            try:
+                webview.windows[0].destroy()
+            except Exception:
+                pass
+
+        def minimize(self):
+            try:
+                webview.windows[0].minimize()
+            except Exception:
+                pass
+
     window = webview.create_window(
         'KRUX // LINKMAPPER',
         f'http://localhost:{SERVER_PORT}',
-        width=380,
-        height=470,
+        width=430,
+        height=540,
         resizable=True,
         min_size=(300, 380),
         frameless=True,
         transparent=True,
+        background_color='#00000000',
     )
     webview.start(_KruxAPI(), private_mode=False)
     os._exit(0)

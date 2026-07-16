@@ -288,7 +288,9 @@
   }
 
   function fitDevice() {
-    const s = Math.min(window.innerWidth / 870, window.innerHeight / 1074);
+    // fit the whole casing but allow it to push a touch wider than pure
+    // letterbox — user asked to widen the design slightly.
+    const s = Math.min(window.innerWidth / 870, window.innerHeight / 1074) * 1.12;
     document.getElementById('device').style.setProperty('--s', s.toFixed(4));
   }
 
@@ -336,6 +338,12 @@
         document.addEventListener('pointerup', up);
       });
     }
+
+    // --- close / minimize live on the casing bezel (no OS toolbar) ---
+    const winClose = $('#winClose');
+    const winMin = $('#winMin');
+    if (winClose && api && api.close) winClose.addEventListener('click', () => api.close());
+    if (winMin && api && api.minimize) winMin.addEventListener('click', () => api.minimize());
 
     $('#summon').onclick = startScan;
     $('#url').addEventListener('keydown', function(e) {

@@ -12,12 +12,19 @@
 <div id="titlebar" class="krux-drag" title="drag"></div>
 <div id="resize" title="resize"></div>
 <div id="device">
-    <div class="crt"></div>
 
-    <header>
-      <h1>[KRUX]</h1>
-      <div class="input-wrap">
-        <span>&gt;</span>
+    <!-- window controls sit on the casing bezel, above the screen -->
+    <div id="win-controls">
+      <div class="win-btn minimize" id="winMin" title="minimize">_</div>
+      <div class="win-btn close" id="winClose" title="close">&times;</div>
+    </div>
+
+    <!-- everything live is confined to the screen region of the casing -->
+    <div id="screen">
+      <div class="crt"></div>
+
+      <div id="cmd">
+        <span class="tag">[KRUX]</span>
         <input id="url" type="text" placeholder="https://example.com" spellcheck="false">
         <div class="depth-wrap">
           <label>d:</label>
@@ -26,34 +33,33 @@
         <button id="summon">SCAN</button>
         <button id="export">DOT</button>
       </div>
-    </header>
 
-    <div id="stage">
-      <div id="progress-bar"><div class="fill"></div></div>
-      <svg class="links"></svg>
-      <div id="nodes"></div>
-      <div id="preview">
-        <div class="cap"><span>PREVIEW</span><span>MONO</span></div>
-        <iframe sandbox="allow-scripts allow-same-origin"></iframe>
+      <div id="stage">
+        <div id="progress-bar"><div class="fill"></div></div>
+        <svg class="links"></svg>
+        <div id="nodes"></div>
+        <div id="preview">
+          <div class="cap"><span>PREVIEW</span><span>MONO</span></div>
+          <iframe sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+        <div id="log"></div>
+        <div id="zoom-controls">
+          <button id="zoomIn" title="zoom in">+</button>
+          <button id="zoomOut" title="zoom out">-</button>
+          <button id="zoomReset" title="reset">*</button>
+        </div>
       </div>
-      <div id="log"></div>
-      <div id="zoom-controls">
-        <button id="zoomIn" title="zoom in">+</button>
-        <button id="zoomOut" title="zoom out">-</button>
-        <button id="zoomReset" title="reset">*</button>
+
+      <footer>
+        <div class="badge" id="count">0 links</div>
+      </footer>
+
+      <div id="spell">
+        <canvas width="300" height="300"></canvas>
+        <button id="closeSpell">[ CLOSE ]</button>
       </div>
-    </div>
-
-    <footer>
-      <div class="badge" id="count">0 links</div>
-    </footer>
-
-    <div id="spell">
-      <canvas width="300" height="300"></canvas>
-      <button id="closeSpell">[ CLOSE ]</button>
     </div>
   </div>
-</div>
 
 <script src="renderer.js"></script>
 <script src="graph.js"></script>
