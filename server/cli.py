@@ -69,7 +69,6 @@ def _open_webview():
         min_size=(300, 380),
         frameless=True,
         transparent=True,
-        background_color='#00000000',
     )
     webview.start(_KruxAPI(), private_mode=False)
     os._exit(0)
